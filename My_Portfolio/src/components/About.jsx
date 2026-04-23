@@ -2,6 +2,8 @@ import React from 'react';
 import SkillsOrbit from './SkillsOrbit';
 
 function About({ skills, asset }) {
+  const resumeFile = 'Resume_Abhishek_KR.pdf';
+
   return (
     <section id="about" className="about">
       <div className="container">
@@ -20,7 +22,7 @@ function About({ skills, asset }) {
             <p>I build applications that are visually polished and smooth to use, while continuously learning the newest web tools.</p>
             <p>I enjoy turning ideas into fast, accessible interfaces that feel modern and intuitive across desktop and mobile devices.</p>
 
-            <a href={asset('Resume_Abhishek_KR.pdf')} download className="btn">Download CV</a>
+            <a href={asset(resumeFile)} download="Abhishek_KR_Resume.pdf" className="btn">Download CV</a>
           </div>
         </div>
       </div>
