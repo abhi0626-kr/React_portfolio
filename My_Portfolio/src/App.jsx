@@ -121,7 +121,8 @@ function App() {
     if (activeFilter === 'all') {
       return projects;
     }
-    return projects.filter((project) => project.category === activeFilter);
+    const normalizedFilter = activeFilter.toLowerCase();
+    return projects.filter((project) => String(project.category).toLowerCase() === normalizedFilter);
   }, [activeFilter]);
 
   const onSubmitContact = (event) => {

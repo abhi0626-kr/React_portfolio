@@ -21,7 +21,7 @@ function Projects({ activeFilter, onFilterChange, filteredProjects, asset }) {
 
         <div className="portfolio-grid">
           {filteredProjects.map((project) => (
-            <article className="portfolio-item" key={project.title}>
+            <article className="portfolio-item animate" key={project.title}>
               <div className="project-card-container">
                 <div className="project-profile-panel">
                   <img src={asset(project.image)} alt={project.title} className="project-cover" />

@@ -58,7 +58,7 @@ export const certificates = [
 
 export const projects = [
   {
-    category: 'web',
+    category: 'app',
     image: 'Textile Trace.jpg',
     title: 'Textile Trace',
     githubLink: 'https://github.com/abhi0626-kr/Textile-trace-chain',
