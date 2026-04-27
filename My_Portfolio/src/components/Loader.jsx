@@ -7,7 +7,8 @@ function Loader({ progress }) {
         <div className="monitor">
           <div className="screen">
             <div className="screen-content">
-              <div className="terminal-text">Initializing Portfolio System...</div>
+              <p className="terminal-text">Initializing</p>
+              <p className="terminal-text">Portfolio System...</p>
               <div className="loading-bar">
                 <div className="loading-progress" style={{ width: `${progress}%` }} />
               </div>

@@ -117,6 +117,88 @@ function App() {
     document.body.style.overflow = selectedCertificate ? 'hidden' : 'auto';
   }, [selectedCertificate]);
 
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return undefined;
+    }
+
+    const mobileQuery = window.matchMedia('(max-width: 820px)');
+    let sections = [];
+    let frameId = null;
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    const updateParallax = () => {
+      frameId = null;
+      const viewportMid = window.innerHeight / 2;
+
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        const sectionMid = rect.top + (rect.height / 2);
+        const distanceFromCenter = sectionMid - viewportMid;
+        const speed = Number.parseFloat(section.style.getPropertyValue('--parallax-speed')) || 0.1;
+        const offset = clamp(-distanceFromCenter * speed * 0.2, -34, 34);
+        section.style.setProperty('--parallax-y', `${offset.toFixed(2)}px`);
+      });
+    };
+
+    const queueParallax = () => {
+      if (frameId !== null) {
+        return;
+      }
+      frameId = window.requestAnimationFrame(updateParallax);
+    };
+
+    const enableParallax = () => {
+      sections = Array.from(document.querySelectorAll('main section'));
+      sections.forEach((section, index) => {
+        section.style.setProperty('--parallax-speed', `${0.085 + ((index % 3) * 0.02)}`);
+      });
+
+      document.body.classList.add('mobile-parallax');
+      window.addEventListener('scroll', queueParallax, { passive: true });
+      window.addEventListener('resize', queueParallax);
+      queueParallax();
+    };
+
+    const disableParallax = () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+        frameId = null;
+      }
+
+      window.removeEventListener('scroll', queueParallax);
+      window.removeEventListener('resize', queueParallax);
+      document.body.classList.remove('mobile-parallax');
+
+      sections.forEach((section) => {
+        section.style.removeProperty('--parallax-speed');
+        section.style.removeProperty('--parallax-y');
+      });
+
+      sections = [];
+    };
+
+    const handleViewportChange = (event) => {
+      if (event.matches) {
+        enableParallax();
+      } else {
+        disableParallax();
+      }
+    };
+
+    if (mobileQuery.matches) {
+      enableParallax();
+    }
+
+    mobileQuery.addEventListener('change', handleViewportChange);
+
+    return () => {
+      mobileQuery.removeEventListener('change', handleViewportChange);
+      disableParallax();
+    };
+  }, []);
+
   const filteredProjects = useMemo(() => {
     if (activeFilter === 'all') {
       return projects;

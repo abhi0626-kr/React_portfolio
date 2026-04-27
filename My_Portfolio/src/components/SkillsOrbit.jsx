@@ -54,8 +54,8 @@ function SkillsOrbit({ skills }) {
     const angle = ((node.indexInRing / node.totalInRing) * 360 + angleOffset * ringRotationSpeed + ringOffset) % 360;
     const radius = isCompact
       ? node.ring === 0
-        ? 92
-        : 138
+        ? 110
+        : 170
       : node.ring === 0
       ? 150
       : 220;

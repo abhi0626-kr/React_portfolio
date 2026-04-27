@@ -13,6 +13,17 @@ function About({ skills, asset }) {
             <div className="skills">
               <h4>My Skills</h4>
               <SkillsOrbit skills={skills} />
+
+              <div className="skills-grid mobile-skills-grid">
+                {skills.map((skill) => (
+                  <article className="skill-item" key={skill.name}>
+                    <div className="skill-logo">
+                      <i className={skill.icon} />
+                    </div>
+                    <p className="skill-name">{skill.name}</p>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
 
