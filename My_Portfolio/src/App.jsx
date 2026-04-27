@@ -125,12 +125,6 @@ function App() {
     return projects.filter((project) => String(project.category).toLowerCase() === normalizedFilter);
   }, [activeFilter]);
 
-  const onSubmitContact = (event) => {
-    event.preventDefault();
-    window.alert('Thank you for your message! I will get back to you soon.');
-    event.currentTarget.reset();
-  };
-
   return (
     <>
       {showLoader && <Loader progress={loadingProgress} />}
@@ -149,7 +143,7 @@ function App() {
             filteredProjects={filteredProjects}
             asset={asset}
           />
-          <Contact links={links} onSubmit={onSubmitContact} />
+          <Contact links={links} />
         </main>
 
         <Footer />
