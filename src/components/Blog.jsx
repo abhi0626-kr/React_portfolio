@@ -3,38 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const DEFAULT_HINT_PASSWORD = '632006';
 
-const DEFAULT_SEED_POSTS = [
-  {
-    id: "post-1785828018158",
-    title: "Hi",
-    category: "Life Update",
-    status: "Completed",
-    date: "Aug 2026",
-    author: "Abhishek KR",
-    authorAvatar: "/I%20am.png",
-    excerpt: "Hi",
-    content: "Hi",
-    image: "/1.jpg",
-    link: "",
-    likes: 0,
-    tags: ["LifeUpdate", "DailyLog"]
-  },
-  {
-    id: "post-1785771302317",
-    title: "Test Photo Post",
-    category: "Life Update",
-    status: "Completed",
-    date: "Aug 2026",
-    author: "Abhishek KR",
-    authorAvatar: "/I%20am.png",
-    excerpt: "Testing upload payload",
-    content: "Testing upload payload",
-    image: "/mongodb-ai-vector-search.png",
-    link: "",
-    likes: 0,
-    tags: ["Life Update"]
-  }
-];
+// Dynamically imported from public/blogData.json to ensure consistency
+const DEFAULT_SEED_POSTS = [];
 
 function Blog() {
   const [posts, setPosts] = useState([]);
@@ -131,6 +101,20 @@ function Blog() {
       localStorage.removeItem('abhishek_blog_posts');
       localStorage.removeItem('abhishek_blog_posts_v2');
 
+      try {
+        // Try loading from public/blogData.json as fallback
+        const blogDataRes = await fetch('/blogData.json');
+        if (blogDataRes.ok) {
+          const blogData = await blogDataRes.json();
+          setPosts(blogData);
+          localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(blogData));
+          return;
+        }
+      } catch (blogDataErr) {
+        console.warn('Could not load blogData.json:', blogDataErr);
+      }
+
+      // Fallback to localStorage
       const localStored = localStorage.getItem('abhishek_blog_posts_v3');
       if (localStored) {
         try {
