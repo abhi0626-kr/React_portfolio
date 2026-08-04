@@ -126,17 +126,29 @@ function Blog() {
     } catch (err) {
       console.warn('Backend API connection note: Using local persistence mode', err);
       setDbStatus('offline');
-      const localStored = localStorage.getItem('abhishek_blog_posts');
+
+      // Clean up legacy cached storage keys from previous builds
+      localStorage.removeItem('abhishek_blog_posts');
+      localStorage.removeItem('abhishek_blog_posts_v2');
+
+      const localStored = localStorage.getItem('abhishek_blog_posts_v3');
       if (localStored) {
         try {
           const parsed = JSON.parse(localStored);
-          setPosts(parsed.length > 0 ? parsed : DEFAULT_SEED_POSTS);
+          const hasOldSeeds = parsed.some((p) => p.id === 'post-seed-1' || p.title === 'Building AI & Modern Web Applications');
+          if (hasOldSeeds || parsed.length === 0) {
+            setPosts(DEFAULT_SEED_POSTS);
+            localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(DEFAULT_SEED_POSTS));
+          } else {
+            setPosts(parsed);
+          }
         } catch (e) {
           setPosts(DEFAULT_SEED_POSTS);
+          localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(DEFAULT_SEED_POSTS));
         }
       } else {
         setPosts(DEFAULT_SEED_POSTS);
-        localStorage.setItem('abhishek_blog_posts', JSON.stringify(DEFAULT_SEED_POSTS));
+        localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(DEFAULT_SEED_POSTS));
       }
     } finally {
       if (isInitial) setLoading(false);
@@ -346,7 +358,7 @@ function Blog() {
 
     const updated = posts.filter((p) => p.id !== postId);
     setPosts(updated);
-    localStorage.setItem('abhishek_blog_posts', JSON.stringify(updated));
+    localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updated));
     if (selectedPost && selectedPost.id === postId) setSelectedPost(null);
     setPostToDelete(null);
     showToast(`Deleted "${postTitle.slice(0, 22)}..."`);
@@ -480,7 +492,7 @@ function Blog() {
       };
       const updated = [fallbackObj, ...posts];
       setPosts(updated);
-      localStorage.setItem('abhishek_blog_posts', JSON.stringify(updated));
+      localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updated));
       showToast('Life update published!');
     }
   };
@@ -509,7 +521,7 @@ function Blog() {
       console.warn('Fallback: updating post locally', err);
       const updatedList = posts.map((p) => (p.id === postId ? { ...p, ...postPayload } : p));
       setPosts(updatedList);
-      localStorage.setItem('abhishek_blog_posts', JSON.stringify(updatedList));
+      localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updatedList));
       showToast('Post updated locally!');
     }
   };
