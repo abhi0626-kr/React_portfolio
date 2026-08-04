@@ -2,7 +2,8 @@ import React from 'react';
 
 function Projects({ activeFilter, onFilterChange, filteredProjects, asset }) {
   return (
-    <section id="portfolio" className="portfolio">
+    <section id="projects" className="portfolio">
+      <div id="portfolio" />
       <div className="container">
         <h2 className="section-title">My <span>Project</span></h2>
 
