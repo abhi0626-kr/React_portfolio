@@ -257,6 +257,8 @@ function Blog() {
         body: JSON.stringify({ password: passwordInput.trim() })
       });
 
+      const data = await res.json();
+      
       if (res.ok) {
         const validPass = passwordInput.trim();
         setAdminPassword(validPass);
@@ -269,9 +271,11 @@ function Blog() {
           setPendingAction(null);
         }
       } else {
+        console.warn('❌ Password verification failed:', data);
         setPasswordError('Incorrect admin password. Please try again.');
       }
     } catch (err) {
+      console.warn('🚨 API Error during password verification:', err);
       if (passwordInput.trim() === DEFAULT_HINT_PASSWORD) {
         const validPass = passwordInput.trim();
         setAdminPassword(validPass);
@@ -284,7 +288,7 @@ function Blog() {
           setPendingAction(null);
         }
       } else {
-        setPasswordError('Incorrect admin password. Please try again.');
+        setPasswordError(`Connection error: ${err.message}. Please check your backend is running.`);
       }
     }
   };
