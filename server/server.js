@@ -11,6 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '632006';
 
+console.log('🔐 Admin Password Initialized:', ADMIN_PASSWORD === '632006' ? 'DEFAULT (632006)' : 'FROM ENV VAR');
+
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
@@ -74,13 +76,25 @@ function requireAdminAuth(req, res, next) {
 
 // Healthcheck route
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Blog Backend database is running smoothly.' });
+  res.json({ 
+    status: 'ok', 
+    message: 'Blog Backend database is running smoothly.',
+    passwordMode: ADMIN_PASSWORD === '632006' ? 'DEFAULT (632006)' : 'ENV_VAR_SET'
+  });
 });
 
 // POST /api/verify-password - Verify password endpoint
 app.post('/api/verify-password', (req, res) => {
   const { password } = req.body;
-  if (password && String(password).trim() === String(ADMIN_PASSWORD).trim()) {
+  const providedPassword = password ? String(password).trim() : '';
+  const expectedPassword = String(ADMIN_PASSWORD).trim();
+  
+  console.log('🔐 Password Verification Attempt:');
+  console.log(`   Provided: "${providedPassword}" (length: ${providedPassword.length})`);
+  console.log(`   Expected: "${expectedPassword}" (length: ${expectedPassword.length})`);
+  console.log(`   Match: ${providedPassword === expectedPassword}`);
+  
+  if (providedPassword === expectedPassword) {
     return res.json({ success: true, message: 'Password verified successfully.' });
   }
   return res.status(401).json({ success: false, error: 'Incorrect Admin Password.' });
