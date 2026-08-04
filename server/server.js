@@ -11,7 +11,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '632006';
 
-console.log('🔐 Admin Password Initialized:', ADMIN_PASSWORD === '632006' ? 'DEFAULT (632006)' : 'FROM ENV VAR');
+console.log('🔐 Server Starting...');
+console.log('   ADMIN_PASSWORD source:', process.env.ADMIN_PASSWORD ? 'ENV_VAR' : 'HARDCODED');
+console.log('   ADMIN_PASSWORD value:', ADMIN_PASSWORD);
 
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
@@ -79,24 +81,28 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     message: 'Blog Backend database is running smoothly.',
-    passwordMode: ADMIN_PASSWORD === '632006' ? 'DEFAULT (632006)' : 'ENV_VAR_SET'
+    adminPasswordSet: !!process.env.ADMIN_PASSWORD,
+    expectedPassword: ADMIN_PASSWORD
   });
 });
 
 // POST /api/verify-password - Verify password endpoint
 app.post('/api/verify-password', (req, res) => {
   const { password } = req.body;
-  const providedPassword = password ? String(password).trim() : '';
-  const expectedPassword = String(ADMIN_PASSWORD).trim();
+  const received = password ? String(password).trim() : '';
+  const expected = String(ADMIN_PASSWORD).trim();
+  const isMatch = received === expected;
   
   console.log('🔐 Password Verification Attempt:');
-  console.log(`   Provided: "${providedPassword}" (length: ${providedPassword.length})`);
-  console.log(`   Expected: "${expectedPassword}" (length: ${expectedPassword.length})`);
-  console.log(`   Match: ${providedPassword === expectedPassword}`);
+  console.log('   Received:', received, `(length: ${received.length})`);
+  console.log('   Expected:', expected, `(length: ${expected.length})`);
+  console.log('   Match:', isMatch);
   
-  if (providedPassword === expectedPassword) {
+  if (isMatch) {
+    console.log('✅ Password verified successfully!');
     return res.json({ success: true, message: 'Password verified successfully.' });
   }
+  console.log('❌ Password verification failed!');
   return res.status(401).json({ success: false, error: 'Incorrect Admin Password.' });
 });
 
