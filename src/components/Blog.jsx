@@ -5,32 +5,34 @@ const DEFAULT_HINT_PASSWORD = '632006';
 
 const DEFAULT_SEED_POSTS = [
   {
-    id: 'post-seed-1',
-    title: 'Building AI & Modern Web Applications',
-    category: '#Project',
-    status: 'Completed',
-    date: '2026-08-03',
-    author: 'Abhishek KR',
-    authorAvatar: '/I%20am.png',
-    excerpt: 'Exploring Generative AI models, full-stack architecture, and building intelligent web applications.',
-    content: 'Welcome to my official developer blog & life journey! Here I share my project updates, tech milestones, and insights in AI and Full-Stack Web Development.',
-    image: '/AI.jpg',
-    likes: 12,
-    tags: ['#AI', '#WebDev', '#React']
+    id: "post-1785828018158",
+    title: "Hi",
+    category: "Life Update",
+    status: "Completed",
+    date: "Aug 2026",
+    author: "Abhishek KR",
+    authorAvatar: "/I%20am.png",
+    excerpt: "Hi",
+    content: "Hi",
+    image: "/1.jpg",
+    link: "",
+    likes: 0,
+    tags: ["LifeUpdate", "DailyLog"]
   },
   {
-    id: 'post-seed-2',
-    title: 'MongoDB AI & Vector Search Integration',
-    category: '#LifeUpdate',
-    status: 'In Progress',
-    date: '2026-08-04',
-    author: 'Abhishek KR',
-    authorAvatar: '/I%20am.png',
-    excerpt: 'Integrating vector search and database architecture for scalable modern web apps.',
-    content: 'Sharing key updates on full stack development, database integration, and responsive user interfaces.',
-    image: '/mongodb-ai-vector-search.png',
-    likes: 8,
-    tags: ['#MongoDB', '#FullStack']
+    id: "post-1785771302317",
+    title: "Test Photo Post",
+    category: "Life Update",
+    status: "Completed",
+    date: "Aug 2026",
+    author: "Abhishek KR",
+    authorAvatar: "/I%20am.png",
+    excerpt: "Testing upload payload",
+    content: "Testing upload payload",
+    image: "/mongodb-ai-vector-search.png",
+    link: "",
+    likes: 0,
+    tags: ["Life Update"]
   }
 ];
 
