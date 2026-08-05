@@ -65,11 +65,11 @@ function Loader({ progress, onOpenPortfolio }) {
         <div className="loader-logo-wrapper">
           <div className="loader-logo-ring" />
           <img
-            src="/dist/2.png"
+            src="/2.png"
             alt="Abhishek Logo"
             className="loader-logo-img"
             onError={(e) => {
-              e.target.src = '/logo.jpg';
+              e.target.src = '/Abhishek%20Logo.png';
             }}
           />
         </div>
