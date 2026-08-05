@@ -76,7 +76,7 @@ function Loader({ progress, onOpenPortfolio }) {
 
         {/* Brand Name */}
         <h1 className="loader-title">Abhishek KR</h1>
-        <p className="loader-subtitle">AI & Full Stack Developer</p>
+        <p className="loader-subtitle">AI & Python Full Stack Developer</p>
 
         {/* Progress Bar & Percentage */}
         <div className="loader-progress-box">
