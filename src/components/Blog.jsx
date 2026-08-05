@@ -101,26 +101,12 @@ function Blog() {
       localStorage.removeItem('abhishek_blog_posts');
       localStorage.removeItem('abhishek_blog_posts_v2');
 
-      try {
-        // Try loading from public/blogData.json as fallback
-        const blogDataRes = await fetch('/blogData.json');
-        if (blogDataRes.ok) {
-          const blogData = await blogDataRes.json();
-          setPosts(blogData);
-          localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(blogData));
-          return;
-        }
-      } catch (blogDataErr) {
-        console.warn('Could not load blogData.json:', blogDataErr);
-      }
-
-      // Fallback to localStorage
       const localStored = localStorage.getItem('abhishek_blog_posts_v3');
-      if (localStored) {
+      if (localStored !== null) {
         try {
           const parsed = JSON.parse(localStored);
           const hasOldSeeds = parsed.some((p) => p.id === 'post-seed-1' || p.title === 'Building AI & Modern Web Applications');
-          if (hasOldSeeds || parsed.length === 0) {
+          if (hasOldSeeds) {
             setPosts(DEFAULT_SEED_POSTS);
             localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(DEFAULT_SEED_POSTS));
           } else {
@@ -131,6 +117,7 @@ function Blog() {
           localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(DEFAULT_SEED_POSTS));
         }
       } else {
+        // First-time visitor: seed default posts
         setPosts(DEFAULT_SEED_POSTS);
         localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(DEFAULT_SEED_POSTS));
       }
