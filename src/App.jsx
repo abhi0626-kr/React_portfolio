@@ -56,17 +56,12 @@ function App() {
           window.clearInterval(progressTimer);
           return 100;
         }
-        return prev + 1;
+        return prev + 2;
       });
-    }, 50);
-
-    const loaderTimer = window.setTimeout(() => {
-      setShowLoader(false);
-    }, 5000);
+    }, 25);
 
     return () => {
       window.clearInterval(progressTimer);
-      window.clearTimeout(loaderTimer);
     };
   }, []);
 
@@ -153,8 +148,19 @@ function App() {
   }, [currentView]);
 
   useEffect(() => {
-    document.body.style.overflow = selectedCertificate ? 'hidden' : 'auto';
-  }, [selectedCertificate]);
+    if (showLoader || selectedCertificate) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [showLoader, selectedCertificate]);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -248,7 +254,12 @@ function App() {
 
   return (
     <>
-      {showLoader && <Loader progress={loadingProgress} />}
+      {showLoader && (
+        <Loader
+          progress={loadingProgress}
+          onOpenPortfolio={() => setShowLoader(false)}
+        />
+      )}
 
       <div className={showLoader ? 'app-shell app-hidden' : 'app-shell'}>
         <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} currentView={currentView} />
