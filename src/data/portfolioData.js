@@ -70,7 +70,7 @@ export const projects = [
     image: 'Expense.jpg',
     title: 'Expense Tracker',
     githubLink: 'https://github.com/abhi0626-kr/Expense-Tracker',
-    liveLink: 'https://abhi0626-kr.github.io/Expense-Tracker/',
+    liveLink: 'https://expense-26-tracker.vercel.app/',
     description: 'A simple app to record income and expenses.'
   },
   {

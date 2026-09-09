@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import initialBlogData from '../../public/blogData.json';
 
 const DEFAULT_HINT_PASSWORD = '632006';
 
-// Dynamically imported from public/blogData.json to ensure consistency
-const DEFAULT_SEED_POSTS = [];
+// Seed posts from public/blogData.json to ensure consistency
+const DEFAULT_SEED_POSTS = initialBlogData || [];
 
 function Blog() {
   const [posts, setPosts] = useState([]);
@@ -76,7 +77,8 @@ function Blog() {
     if (isInitial) setLoading(true);
     try {
       const res = await fetch('/api/posts');
-      if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
         setPosts(data);
         setDbStatus('connected');
@@ -91,10 +93,9 @@ function Blog() {
           return updated;
         });
       } else {
-        throw new Error('API returned status ' + res.status);
+        throw new Error('API unavailable or non-JSON response');
       }
     } catch (err) {
-      console.warn('Backend API connection note: Using local persistence mode', err);
       setDbStatus('offline');
 
       // Clean up legacy cached storage keys from previous builds
@@ -131,8 +132,8 @@ function Blog() {
     setTimeout(() => setToastMessage(''), 3200);
   };
 
-  // Automatic client-side image compression to prevent HTTP 413 Payload Too Large
-  const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.82) => {
+  // Automatic client-side image optimization preserving resolution and quality
+  const compressImage = (file, maxWidth = 2500, maxHeight = 2500, quality = 0.92) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onerror = (err) => reject(err);
@@ -160,7 +161,8 @@ function Blog() {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+          const dataUrl = canvas.toDataURL(mimeType, quality);
           resolve(dataUrl);
         };
         img.src = event.target.result;
@@ -173,13 +175,24 @@ function Blog() {
   const handleDeviceFileUpload = async (e, onComplete) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
-      showToast('Optimizing photo...');
+      showToast('Processing photo...');
       try {
-        const compressedDataUrl = await compressImage(file);
-        onComplete(compressedDataUrl);
-        showToast('Photo attached & optimized! 📸');
+        // For files under 2.5MB, use original raw file directly to retain 100% original size & quality
+        if (file.size <= 2.5 * 1024 * 1024) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            onComplete(event.target.result);
+            showToast('Photo attached at original resolution! 📸');
+          };
+          reader.readAsDataURL(file);
+        } else {
+          // For larger files >2.5MB, apply high-definition optimization
+          const compressedDataUrl = await compressImage(file);
+          onComplete(compressedDataUrl);
+          showToast('Photo attached & optimized! 📸');
+        }
       } catch (err) {
-        console.warn('Canvas compression note, reading raw file', err);
+        console.warn('Compression fallback note, reading raw file', err);
         const reader = new FileReader();
         reader.onload = (event) => {
           onComplete(event.target.result);
@@ -199,15 +212,18 @@ function Blog() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: adminPassword })
         });
-        if (res.ok) {
+        const contentType = res.headers.get('content-type');
+        if (res.ok && contentType && contentType.includes('application/json')) {
           actionCallback(adminPassword);
           return;
         }
       } catch (e) {
-        if (adminPassword === DEFAULT_HINT_PASSWORD) {
-          actionCallback(adminPassword);
-          return;
-        }
+        // Fallback for local persistence mode below
+      }
+
+      if (adminPassword === DEFAULT_HINT_PASSWORD) {
+        actionCallback(adminPassword);
+        return;
       }
     }
 
@@ -219,47 +235,45 @@ function Blog() {
 
   const handleVerifyPasswordSubmit = async (e) => {
     e.preventDefault();
-    if (!passwordInput.trim()) return;
+    const enteredPass = passwordInput.trim();
+    if (!enteredPass) return;
 
     try {
       const res = await fetch('/api/verify-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passwordInput.trim() })
+        body: JSON.stringify({ password: enteredPass })
       });
 
-      const data = await res.json();
-      
-      if (res.ok) {
-        const validPass = passwordInput.trim();
-        setAdminPassword(validPass);
-        sessionStorage.setItem('blog_admin_password', validPass);
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        setAdminPassword(enteredPass);
+        sessionStorage.setItem('blog_admin_password', enteredPass);
         setShowPasswordModal(false);
         setPasswordError('');
         showToast('Admin password verified! Access granted.');
         if (pendingAction) {
-          pendingAction(validPass);
+          pendingAction(enteredPass);
           setPendingAction(null);
         }
+        return;
       } else {
-        console.warn('❌ Password verification failed:', data);
-        setPasswordError('Incorrect admin password. Please try again.');
+        throw new Error('API unavailable or non-JSON response');
       }
     } catch (err) {
-      console.warn('🚨 API Error during password verification:', err);
-      if (passwordInput.trim() === DEFAULT_HINT_PASSWORD) {
-        const validPass = passwordInput.trim();
-        setAdminPassword(validPass);
-        sessionStorage.setItem('blog_admin_password', validPass);
+      if (enteredPass === DEFAULT_HINT_PASSWORD) {
+        setAdminPassword(enteredPass);
+        sessionStorage.setItem('blog_admin_password', enteredPass);
         setShowPasswordModal(false);
         setPasswordError('');
         showToast('Admin access granted.');
         if (pendingAction) {
-          pendingAction(validPass);
+          pendingAction(enteredPass);
           setPendingAction(null);
         }
       } else {
-        setPasswordError(`Connection error: ${err.message}. Please check your backend is running.`);
+        setPasswordError('Incorrect admin password. Please try again.');
       }
     }
   };
@@ -277,13 +291,17 @@ function Blog() {
     }));
 
     try {
-      await fetch(`/api/posts/${postId}/like`, {
+      const res = await fetch(`/api/posts/${postId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ delta })
       });
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        // Record locally
+      }
     } catch (err) {
-      console.log('Local like state recorded', err);
+      // Local like state recorded
     }
   };
 
@@ -323,17 +341,23 @@ function Blog() {
     const postTitle = targetPost ? targetPost.title : 'Post';
 
     try {
-      await fetch(`/api/posts/${postId}`, {
+      const res = await fetch(`/api/posts/${postId}`, {
         method: 'DELETE',
         headers: { 'x-admin-password': adminPassword }
       });
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        throw new Error('API unavailable');
+      }
     } catch (err) {
-      console.warn('Backend delete note', err);
+      // Fallback local delete
     }
 
-    const updated = posts.filter((p) => p.id !== postId);
-    setPosts(updated);
-    localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updated));
+    setPosts((prev) => {
+      const updated = prev.filter((p) => p.id !== postId);
+      localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updated));
+      return updated;
+    });
     if (selectedPost && selectedPost.id === postId) setSelectedPost(null);
     setPostToDelete(null);
     showToast(`Deleted "${postTitle.slice(0, 22)}..."`);
@@ -435,7 +459,7 @@ function Blog() {
     });
   };
 
-  // Save new post via API
+  // Save new post via API or Local Storage
   const saveNewPost = async (postPayload, currentPass) => {
     try {
       const res = await fetch('/api/posts', {
@@ -447,16 +471,21 @@ function Blog() {
         body: JSON.stringify(postPayload)
       });
 
-      if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
         const created = await res.json();
-        setPosts((prev) => [created, ...prev]);
+        setPosts((prev) => {
+          const updated = [created, ...prev];
+          localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updated));
+          return updated;
+        });
         setLikeCounts((prev) => ({ ...prev, [created.id]: 0 }));
         showToast('Post published to Database! 🎉');
+        return;
       } else {
-        throw new Error('Failed server creation');
+        throw new Error('API unavailable or non-JSON response');
       }
     } catch (err) {
-      console.warn('Fallback: saving post locally', err);
       const fallbackObj = {
         id: `local-${Date.now()}`,
         author: 'Abhishek KR',
@@ -465,14 +494,17 @@ function Blog() {
         comments_count: 0,
         ...postPayload
       };
-      const updated = [fallbackObj, ...posts];
-      setPosts(updated);
-      localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updated));
-      showToast('Life update published!');
+      setPosts((prev) => {
+        const updated = [fallbackObj, ...prev];
+        localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updated));
+        return updated;
+      });
+      setLikeCounts((prev) => ({ ...prev, [fallbackObj.id]: 0 }));
+      showToast('Life update published! 🎉');
     }
   };
 
-  // Update existing post via API
+  // Update existing post via API or Local Storage
   const updateExistingPost = async (postId, postPayload, currentPass) => {
     try {
       const res = await fetch(`/api/posts/${postId}`, {
@@ -484,20 +516,30 @@ function Blog() {
         body: JSON.stringify(postPayload)
       });
 
-      if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
         const updated = await res.json();
-        setPosts((prev) => prev.map((p) => (p.id === postId ? updated : p)));
+        setPosts((prev) => {
+          const updatedList = prev.map((p) => (p.id === postId ? updated : p));
+          localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updatedList));
+          return updatedList;
+        });
         if (selectedPost && selectedPost.id === postId) setSelectedPost(updated);
         showToast('Post updated successfully! ✏️');
+        return;
       } else {
-        throw new Error('Failed to update post');
+        throw new Error('API unavailable or non-JSON response');
       }
     } catch (err) {
-      console.warn('Fallback: updating post locally', err);
-      const updatedList = posts.map((p) => (p.id === postId ? { ...p, ...postPayload } : p));
-      setPosts(updatedList);
-      localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updatedList));
-      showToast('Post updated locally!');
+      setPosts((prev) => {
+        const updatedList = prev.map((p) => (p.id === postId ? { ...p, ...postPayload } : p));
+        localStorage.setItem('abhishek_blog_posts_v3', JSON.stringify(updatedList));
+        return updatedList;
+      });
+      if (selectedPost && selectedPost.id === postId) {
+        setSelectedPost((prev) => ({ ...prev, ...postPayload }));
+      }
+      showToast('Post updated locally! ✏️');
     }
   };
 
@@ -514,12 +556,13 @@ function Blog() {
     if (!postComments[postId]) {
       try {
         const res = await fetch(`/api/posts/${postId}/comments`);
-        if (res.ok) {
+        const contentType = res.headers.get('content-type');
+        if (res.ok && contentType && contentType.includes('application/json')) {
           const commentsData = await res.json();
           setPostComments((prev) => ({ ...prev, [postId]: commentsData }));
         }
       } catch (err) {
-        console.log('Comments fallback mode', err);
+        // Comments fallback mode
       }
     }
   };
@@ -542,12 +585,17 @@ function Blog() {
     setCommentInput('');
 
     try {
-      await fetch(`/api/posts/${postId}/comments`, {
+      const res = await fetch(`/api/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ author: 'Visitor', text: newCommentObj.text })
       });
-      showToast('Comment added!');
+      const contentType = res.headers.get('content-type');
+      if (res.ok && contentType && contentType.includes('application/json')) {
+        showToast('Comment added!');
+      } else {
+        showToast('Comment saved!');
+      }
     } catch (err) {
       showToast('Comment saved!');
     }
@@ -778,8 +826,8 @@ function Blog() {
 
               {/* Quick Image Preview if selected */}
               {quickPostImage && (
-                <div className="mb-4 relative w-full h-40 rounded-xl overflow-hidden border border-white/15">
-                  <img src={quickPostImage} alt="Quick preview" className="w-full h-full object-cover" />
+                <div className="mb-4 relative w-full max-h-[380px] min-h-[160px] rounded-xl overflow-hidden border border-white/15 bg-black/60 flex items-center justify-center p-2">
+                  <img src={quickPostImage} alt="Quick preview" className="max-h-[340px] w-auto max-w-full object-contain rounded-lg shadow-md" />
                   <button
                     onClick={() => setQuickPostImage('')}
                     className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 text-white hover:bg-black transition-colors"
@@ -914,9 +962,9 @@ function Blog() {
 
                     {/* Image Attachment with Error Fallback */}
                     {post.image && (
-                      <div className="w-full h-72 overflow-hidden relative border-y border-white/5 post-image-wrapper">
+                      <div className="w-full max-h-[480px] overflow-hidden relative border-y border-white/5 post-image-wrapper bg-black/50 flex items-center justify-center p-2">
                         <img
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                          className="max-h-[450px] w-auto max-w-full object-contain hover:scale-102 transition-transform duration-500 rounded-lg"
                           alt={post.title}
                           src={post.image}
                           onError={(e) => {
@@ -1125,11 +1173,11 @@ function Blog() {
               </button>
 
               {selectedPost.image && (
-                <div className="w-full h-64 rounded-xl overflow-hidden mb-6 relative border border-white/10 reader-image-wrapper">
+                <div className="w-full max-h-[550px] rounded-xl overflow-hidden mb-6 relative border border-white/10 reader-image-wrapper bg-black/50 flex items-center justify-center p-2">
                   <img
                     src={selectedPost.image}
                     alt={selectedPost.title}
-                    className="w-full h-full object-cover"
+                    className="max-h-[520px] w-auto max-w-full object-contain rounded-lg shadow-lg"
                     onError={(e) => {
                       const wrapper = e.target.closest('.reader-image-wrapper');
                       if (wrapper) wrapper.style.display = 'none';
@@ -1468,11 +1516,11 @@ function Blog() {
 
                   {/* Live Image Preview inside Form */}
                   {formData.image && (
-                    <div className="mt-3 relative w-full h-40 rounded-xl overflow-hidden border border-white/15 bg-black/40 form-image-preview-wrapper">
+                    <div className="mt-3 relative w-full max-h-[420px] min-h-[160px] rounded-xl overflow-hidden border border-white/15 bg-black/60 flex items-center justify-center p-2 form-image-preview-wrapper">
                       <img
                         src={formData.image}
                         alt="Image preview"
-                        className="w-full h-full object-cover"
+                        className="max-h-[380px] w-auto max-w-full object-contain rounded-lg shadow-md"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           const errNotice = e.target.parentElement.querySelector('.image-error-notice');
