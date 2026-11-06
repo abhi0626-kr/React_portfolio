@@ -42,7 +42,7 @@ function Contact({ links }) {
 
             <div className="contact-item"><i className="fas fa-envelope" /><p>abhishek636kr@email.com</p></div>
             <div className="contact-item"><i className="fas fa-phone" /><p>+91 (6383221055)</p></div>
-            <div className="contact-item"><i className="fas fa-map-marker-alt" /><p>Tirupattur, Tamil Nadu</p></div>
+            <div className="contact-item"><i className="fas fa-map-marker-alt" /><p>Bangalore, India</p></div>
 
             <div className="social-links">
               {links.map((link) => (

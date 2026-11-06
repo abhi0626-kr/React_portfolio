@@ -20,7 +20,7 @@ function Header({ isMenuOpen, setIsMenuOpen, currentView }) {
             href="#home"
             onClick={() => setIsMenuOpen(false)}
           >
-            I'm, Abhishek
+            ABHISHEK<span className="logo-r-badge">®</span>
           </a>
 
           {/* Desktop Navigation */}
@@ -44,8 +44,11 @@ function Header({ isMenuOpen, setIsMenuOpen, currentView }) {
             })}
           </nav>
 
-          {/* Mobile Hamburger */}
+          {/* Right Action */}
           <div className="flex items-center gap-4">
+            <a href="#contact" className="nav-talk-btn hidden sm:inline-flex">
+              Let&apos;s talk ↗
+            </a>
             <button
               className="md:hidden material-symbols-outlined text-on-surface-variant hover:text-white"
               type="button"
@@ -71,6 +74,13 @@ function Header({ isMenuOpen, setIsMenuOpen, currentView }) {
                 {item.label}
               </a>
             ))}
+            <a
+              href="#contact"
+              onClick={() => setIsMenuOpen(false)}
+              className="block pt-2 text-primary font-bold text-sm"
+            >
+              Let&apos;s talk ↗
+            </a>
           </div>
         )}
       </header>
@@ -90,7 +100,7 @@ function Header({ isMenuOpen, setIsMenuOpen, currentView }) {
             <div className="logo">
               <a href="#home" onClick={() => setIsMenuOpen(false)}>
                 <span className="icon-bounce" />
-                I'm <span>, Abhishek</span>
+                ABHISHEK<span className="logo-r-badge">®</span>
               </a>
             </div>
           </div>
@@ -112,7 +122,9 @@ function Header({ isMenuOpen, setIsMenuOpen, currentView }) {
           </div>
 
           <div className="nav-right">
-            <div className="social-links" />
+            <a href="#contact" className="nav-talk-btn">
+              Let&apos;s talk ↗
+            </a>
 
             <button
               className={isMenuOpen ? 'hamburger active' : 'hamburger'}

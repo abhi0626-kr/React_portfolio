@@ -17,24 +17,46 @@ export const skills = [
 
 export const services = [
   {
-    icon: 'fas fa-code',
-    title: 'Front-end Development',
-    description: 'Custom website development tailored to your business needs using modern technologies and best practices.'
+    icon: 'fas fa-laptop-code',
+    title: 'Python & MERN Full-Stack Dev',
+    highlight: 'Scalable Full-Stack Architecture',
+    description: 'Architecting end-to-end web applications combining React.js frontends with Python (Flask) or Node.js/Express backends, MongoDB, and Firebase auth—reducing load times by 40% with real-time sync.',
+    tags: ['React.js', 'Python (Flask)', 'Node.js', 'Express', 'MongoDB']
   },
   {
-    icon: 'fas fa-mobile-alt',
-    title: 'Responsive Design',
-    description: 'Websites that look great and function perfectly on all devices from desktop to mobile.'
+    icon: 'fas fa-robot',
+    title: 'Generative AI & LLM Solutions',
+    highlight: 'Streaming AI & Chatbot Systems',
+    description: 'Building full-stack AI applications using Google Gemini 2.5 API with real-time streaming responses, conversational session persistence in SQL Alchemy, prompt engineering, and secure REST endpoints.',
+    tags: ['Google Gemini 2.5', 'GenAI Tools', 'Prompt Eng', 'Flask APIs']
   },
   {
-    icon: 'fas fa-paint-brush',
-    title: 'UI/UX Design',
-    description: 'Beautiful, intuitive interfaces designed with user experience principles in mind.'
+    icon: 'fas fa-chart-line',
+    title: 'Data Science & Predictive Modeling',
+    highlight: 'EDA & Machine Learning Pipelines',
+    description: 'Conducting exploratory data analysis (EDA), text normalization, and feature extraction using Python, Pandas, Matplotlib, and Seaborn to deliver end-to-end recommendation engines and predictive models.',
+    tags: ['Pandas', 'NumPy', 'Matplotlib', 'Seaborn', 'Scikit-Learn']
   },
   {
-    icon: 'fas fa-search',
-    title: 'Application Development',
-    description: 'Optimized websites and applications that are fast, maintainable, and user-focused.'
+    icon: 'fas fa-chart-pie',
+    title: 'Data Visualization & BI Dashboards',
+    highlight: '20,000+ Record KPI Analytics',
+    description: 'Designing interactive Looker Studio and Tableau business intelligence dashboards with KPI cards. Transforming complex PostgreSQL datasets (20k+ records) into dynamic executive monitoring systems.',
+    tags: ['Looker Studio', 'Tableau', 'PostgreSQL', 'SQL Queries']
+  },
+  {
+    icon: 'fas fa-server',
+    title: 'REST API & Cloud Architecture',
+    highlight: 'Secure Microservices & CI/CD',
+    description: 'Engineering resilient RESTful API endpoints with JWT authentication, CORS security headers, database schemas in MySQL/Supabase, and automated deployment across Vercel, Netlify, and Render.',
+    tags: ['REST APIs', 'Supabase', 'MySQL', 'JWT Auth', 'CI/CD']
+  },
+  {
+    icon: 'fas fa-link',
+    title: 'Web3 & Blockchain Systems',
+    highlight: 'Smart Contracts & Verification',
+    description: 'Designing decentralized platforms with Solidity and Hardhat on Polygon Amoy, featuring SHA-256 integrity checks, batch lifecycle APIs, QR verification, and on-chain event tracking.',
+    tags: ['Solidity', 'Hardhat', 'Polygon Amoy', 'Smart Contracts']
   }
 ];
 
