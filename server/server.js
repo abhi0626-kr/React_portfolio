@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,16 +11,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '632006';
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'blog.db');
 
 console.log('🔐 Server Starting...');
+console.log('   PORT:', PORT);
+console.log('   Database Path:', dbPath);
 console.log('   ADMIN_PASSWORD source:', process.env.ADMIN_PASSWORD ? 'ENV_VAR' : 'HARDCODED');
-console.log('   ADMIN_PASSWORD value:', ADMIN_PASSWORD);
 
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
-const dbPath = path.join(__dirname, 'blog.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error connecting to SQLite database:', err);
@@ -46,10 +48,16 @@ function initDatabase() {
         image TEXT,
         link TEXT,
         likes INTEGER DEFAULT 0,
+        comments_count INTEGER DEFAULT 0,
         tags TEXT DEFAULT '[]',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Migration safeguard: Add comments_count column if it doesn't exist
+    db.run('ALTER TABLE posts ADD COLUMN comments_count INTEGER DEFAULT 0', () => {
+      // Silently continue if column already exists
+    });
 
     // Create Comments table
     db.run(`
@@ -62,8 +70,67 @@ function initDatabase() {
         FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE
       )
     `);
+
     // Ensure all posts use updated avatar
     db.run("UPDATE posts SET author_avatar = '/I%20am.png'");
+
+    // Auto-seed initial posts from blogData.json if table is empty
+    db.get('SELECT COUNT(*) as count FROM posts', (err, row) => {
+      if (!err && row && row.count === 0) {
+        console.log('🌱 Database is empty. Auto-seeding initial posts...');
+        const possiblePaths = [
+          path.join(__dirname, '..', 'public', 'blogData.json'),
+          path.join(__dirname, 'public', 'blogData.json'),
+          path.join(process.cwd(), 'public', 'blogData.json')
+        ];
+
+        let seedFile = null;
+        for (const p of possiblePaths) {
+          if (fs.existsSync(p)) {
+            seedFile = p;
+            break;
+          }
+        }
+
+        if (seedFile) {
+          try {
+            const rawData = fs.readFileSync(seedFile, 'utf8');
+            const posts = JSON.parse(rawData);
+            const insertStmt = db.prepare(`
+              INSERT INTO posts (id, title, category, status, date, author, author_avatar, excerpt, content, image, link, likes, comments_count, tags)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            posts.forEach((post) => {
+              insertStmt.run([
+                post.id || `post-${Date.now()}`,
+                post.title || 'Untitled',
+                post.category || 'Life Update',
+                post.status || 'Completed',
+                post.date || 'Aug 2026',
+                post.author || 'Abhishek KR',
+                post.authorAvatar || post.author_avatar || '/I%20am.png',
+                post.excerpt || '',
+                post.content || '',
+                post.image || '',
+                post.link || '',
+                post.likes || 0,
+                post.comments_count || 0,
+                typeof post.tags === 'string' ? post.tags : JSON.stringify(post.tags || [])
+              ]);
+            });
+
+            insertStmt.finalize(() => {
+              console.log(`✅ Successfully seeded ${posts.length} initial posts from ${seedFile}`);
+            });
+          } catch (seedErr) {
+            console.error('⚠️ Failed to seed initial posts:', seedErr);
+          }
+        } else {
+          console.log('ℹ️ No seed file found at public/blogData.json');
+        }
+      }
+    });
   });
 }
 
@@ -76,10 +143,22 @@ function requireAdminAuth(req, res, next) {
   return res.status(401).json({ error: 'Unauthorized: Invalid Admin Password' });
 }
 
+// Root route for quick verification when opening backend URL in browser
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Abhishek Portfolio Blog API',
+    endpoints: {
+      health: '/api/health',
+      posts: '/api/posts'
+    }
+  });
+});
+
 // Healthcheck route
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     message: 'Blog Backend database is running smoothly.',
     adminPasswordSet: !!process.env.ADMIN_PASSWORD,
     expectedPassword: ADMIN_PASSWORD
@@ -92,12 +171,12 @@ app.post('/api/verify-password', (req, res) => {
   const received = password ? String(password).trim() : '';
   const expected = String(ADMIN_PASSWORD).trim();
   const isMatch = received === expected;
-  
+
   console.log('🔐 Password Verification Attempt:');
   console.log('   Received:', received, `(length: ${received.length})`);
   console.log('   Expected:', expected, `(length: ${expected.length})`);
   console.log('   Match:', isMatch);
-  
+
   if (isMatch) {
     console.log('✅ Password verified successfully!');
     return res.json({ success: true, message: 'Password verified successfully.' });
@@ -115,7 +194,8 @@ app.get('/api/posts', (req, res) => {
     const formatted = rows.map((row) => ({
       ...row,
       tags: JSON.parse(row.tags || '[]'),
-      authorAvatar: row.author_avatar || row.authorAvatar
+      authorAvatar: row.author_avatar || row.authorAvatar,
+      commentsCount: row.comments_count || 0
     }));
     res.json(formatted);
   });
@@ -150,8 +230,8 @@ app.post('/api/posts', requireAdminAuth, (req, res) => {
   const tagsJson = JSON.stringify(tags || [postCategory]);
 
   const query = `
-    INSERT INTO posts (id, title, category, status, date, author, author_avatar, excerpt, content, image, link, likes, tags)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+    INSERT INTO posts (id, title, category, status, date, author, author_avatar, excerpt, content, image, link, likes, comments_count, tags)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?)
   `;
 
   db.run(
@@ -168,7 +248,8 @@ app.post('/api/posts', requireAdminAuth, (req, res) => {
         res.status(201).json({
           ...newPost,
           tags: JSON.parse(newPost.tags || '[]'),
-          authorAvatar: newPost.author_avatar
+          authorAvatar: newPost.author_avatar,
+          commentsCount: newPost.comments_count || 0
         });
       });
     }
@@ -217,7 +298,8 @@ app.put('/api/posts/:id', requireAdminAuth, (req, res) => {
         res.json({
           ...updatedPost,
           tags: JSON.parse(updatedPost.tags || '[]'),
-          authorAvatar: updatedPost.author_avatar
+          authorAvatar: updatedPost.author_avatar,
+          commentsCount: updatedPost.comments_count || 0
         });
       });
     }

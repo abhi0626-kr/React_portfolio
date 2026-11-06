@@ -7,6 +7,8 @@ const DEFAULT_HINT_PASSWORD = '632006';
 // Seed posts from public/blogData.json to ensure consistency
 const DEFAULT_SEED_POSTS = initialBlogData || [];
 
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
 function Blog() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +78,7 @@ function Blog() {
   const fetchPosts = async (isInitial = false) => {
     if (isInitial) setLoading(true);
     try {
-      const res = await fetch('/api/posts');
+      const res = await fetch(`${API_BASE}/api/posts`);
       const contentType = res.headers.get('content-type');
       if (res.ok && contentType && contentType.includes('application/json')) {
         const data = await res.json();
@@ -207,7 +209,7 @@ function Blog() {
   const executeAdminAction = async (actionCallback) => {
     if (adminPassword) {
       try {
-        const res = await fetch('/api/verify-password', {
+        const res = await fetch(`${API_BASE}/api/verify-password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password: adminPassword })
@@ -239,7 +241,7 @@ function Blog() {
     if (!enteredPass) return;
 
     try {
-      const res = await fetch('/api/verify-password', {
+      const res = await fetch(`${API_BASE}/api/verify-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: enteredPass })
@@ -291,7 +293,7 @@ function Blog() {
     }));
 
     try {
-      const res = await fetch(`/api/posts/${postId}/like`, {
+      const res = await fetch(`${API_BASE}/api/posts/${postId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ delta })
@@ -341,7 +343,7 @@ function Blog() {
     const postTitle = targetPost ? targetPost.title : 'Post';
 
     try {
-      const res = await fetch(`/api/posts/${postId}`, {
+      const res = await fetch(`${API_BASE}/api/posts/${postId}`, {
         method: 'DELETE',
         headers: { 'x-admin-password': adminPassword }
       });
@@ -462,7 +464,7 @@ function Blog() {
   // Save new post via API or Local Storage
   const saveNewPost = async (postPayload, currentPass) => {
     try {
-      const res = await fetch('/api/posts', {
+      const res = await fetch(`${API_BASE}/api/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -507,7 +509,7 @@ function Blog() {
   // Update existing post via API or Local Storage
   const updateExistingPost = async (postId, postPayload, currentPass) => {
     try {
-      const res = await fetch(`/api/posts/${postId}`, {
+      const res = await fetch(`${API_BASE}/api/posts/${postId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -555,7 +557,7 @@ function Blog() {
 
     if (!postComments[postId]) {
       try {
-        const res = await fetch(`/api/posts/${postId}/comments`);
+        const res = await fetch(`${API_BASE}/api/posts/${postId}/comments`);
         const contentType = res.headers.get('content-type');
         if (res.ok && contentType && contentType.includes('application/json')) {
           const commentsData = await res.json();
@@ -585,7 +587,7 @@ function Blog() {
     setCommentInput('');
 
     try {
-      const res = await fetch(`/api/posts/${postId}/comments`, {
+      const res = await fetch(`${API_BASE}/api/posts/${postId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ author: 'Visitor', text: newCommentObj.text })

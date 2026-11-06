@@ -118,11 +118,20 @@ function Header({ isMenuOpen, setIsMenuOpen, currentView }) {
                   </a>
                 </li>
               ))}
+              <li className="mobile-talk-li">
+                <a
+                  href="#contact"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="mobile-drawer-talk-btn"
+                >
+                  Let&apos;s talk ↗
+                </a>
+              </li>
             </ul>
           </div>
 
           <div className="nav-right">
-            <a href="#contact" className="nav-talk-btn">
+            <a href="#contact" className="nav-talk-btn nav-talk-desktop">
               Let&apos;s talk ↗
             </a>
 

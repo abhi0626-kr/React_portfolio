@@ -3,6 +3,15 @@
   command = "npm run build"
   publish = "dist"
 
+# Proxy API requests to your deployed cloud backend (Render / Railway)
+# Status 200 rewrite forwards all methods (GET, POST, PUT, DELETE), headers, and payloads
+[[redirects]]
+  from = "/api/*"
+  to = "https://abhishek-portfolio-backend.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Single Page Application (SPA) fallback for React routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
