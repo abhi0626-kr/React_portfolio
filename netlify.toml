@@ -3,11 +3,11 @@
   command = "npm run build"
   publish = "dist"
 
-# Proxy API requests to your deployed cloud backend (Render / Railway)
+# Proxy API requests to your deployed cloud backend (Render)
 # Status 200 rewrite forwards all methods (GET, POST, PUT, DELETE), headers, and payloads
 [[redirects]]
   from = "/api/*"
-  to = "https://abhishek-portfolio-backend.onrender.com/api/:splat"
+  to = "https://abhishek-portfolio-backend-vee3.onrender.com/api/:splat"
   status = 200
   force = true
 

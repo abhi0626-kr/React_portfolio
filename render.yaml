@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: abhishek-portfolio-backend
+    name: abhishek-portfolio-backend-vee3
     runtime: node
     plan: free
     buildCommand: npm install
