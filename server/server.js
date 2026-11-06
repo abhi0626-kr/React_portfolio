@@ -79,6 +79,7 @@ function initDatabase() {
       if (!err && row && row.count === 0) {
         console.log('🌱 Database is empty. Auto-seeding initial posts...');
         const possiblePaths = [
+          path.join(__dirname, 'blogData.json'),
           path.join(__dirname, '..', 'public', 'blogData.json'),
           path.join(__dirname, 'public', 'blogData.json'),
           path.join(process.cwd(), 'public', 'blogData.json')
